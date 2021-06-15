@@ -1,0 +1,15 @@
+pandas
+numpy
+scipy
+matplotlib
+sklearn
+lightfm
+torch
+jupyterlab
+optuna
+tqdm
+tensorboard
+nltk
+matplotlib
+implicit
+tensorboard
