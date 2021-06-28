@@ -121,7 +121,7 @@ class TorchALS(nn.Module):
                 number_of_predictions: int = 100,
                 excluding_predictions=None,
                 drop_cold_users: bool = True,
-                batch_size=1000,
+                batch_size: int = 1000,
                 user_ids=None) -> np.array:
 
         """
@@ -376,7 +376,7 @@ class AutoEncoderRecommender(nn.Module):
                 number_of_predictions: int = 100,
                 excluding_predictions=None,
                 drop_cold_users: bool = True,
-                batch_size=1000,
+                batch_size: int = 1000,
                 user_ids=None) -> np.array:
 
         """
@@ -646,8 +646,8 @@ class DSSM(nn.Module):
                 number_of_predictions: int = 100,
                 excluding_predictions=None,
                 drop_cold_users: bool = True,
-                batch_size_users=1000,
-                batch_size_items=1000,
+                batch_size_users: int = 1000,
+                batch_size_items: int = 1000,
                 user_ids=None) -> np.array:
         """
         Method for generating predictions

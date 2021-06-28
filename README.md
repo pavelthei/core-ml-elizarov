@@ -129,7 +129,7 @@ train, train_val, validation, test = sp.csr_matrix((train['rating'], (train['use
 
 ```python
 # Импортируем модели
-from src.models import MostPopular, SVDRecommender
+from src.models import MostPopular, SVDRecommender, RandomRecommender
 from src.torch_models import TorchALS, AutoEncoderRecommender
 
 # Импортируем ALS из библиотеки implicit 
@@ -167,27 +167,30 @@ print("NDCG calculating stage")
 most_pop_ndcg = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-      3%|▎         | 1/30 [00:00<00:03,  8.77it/s]
+      3%|▎         | 1/30 [00:00<00:03,  8.79it/s]
 
     Predicting stage
 
 
-    100%|██████████| 30/30 [00:03<00:00,  8.87it/s]
-     20%|██        | 6/30 [00:00<00:00, 51.20it/s]
+    100%|██████████| 30/30 [00:03<00:00,  8.98it/s]
+     20%|██        | 6/30 [00:00<00:00, 51.57it/s]
 
     NDCG calculating stage
 
 
-    100%|██████████| 30/30 [00:00<00:00, 52.77it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.95it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.22it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.72it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.85it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.81it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.25it/s]
+    100%|██████████| 30/30 [00:00<00:00, 51.97it/s]
 
 
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
+# random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictions = random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123, number_of_predictions=20)
 model_prediction = most_pop.predict(train_for_test, test_active, excluding_predictions=train_val_for_test, batch_size=100, drop_cold_users=True, number_of_predictions=20)
 
 random_ndcg = ndcg_at_k(random_predictions, test_active, k=20)
@@ -201,12 +204,12 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 
 ```
 
-    100%|██████████| 30/30 [00:03<00:00,  9.07it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.95it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.87it/s]
+    100%|██████████| 30/30 [00:03<00:00,  9.17it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.36it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.36it/s]
 
     
-    P-value: 2.7334673513478037e-307
+    P-value: 6.18506653378542e-303
     
 
 
@@ -250,33 +253,34 @@ print("NDCG calculating stage")
 svd_ndcg = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-    [32m[I 2021-06-15 18:52:02,048][0m A new study created in memory with name: no-name-53d9ad37-23d6-4aa6-86c2-975461a1c51d[0m
-    100%|██████████| 40/40 [00:00<00:00, 53.82it/s]
-    [32m[I 2021-06-15 18:52:35,106][0m Trial 0 finished with value: 0.14369960370709534 and parameters: {'n_components': 60, 'n_iter': 20}. Best is trial 0 with value: 0.14369960370709534.[0m
-    100%|██████████| 40/40 [00:00<00:00, 54.13it/s]
-    [32m[I 2021-06-15 18:53:13,444][0m Trial 1 finished with value: 0.13727802593366245 and parameters: {'n_components': 100, 'n_iter': 15}. Best is trial 0 with value: 0.14369960370709534.[0m
-    100%|██████████| 40/40 [00:00<00:00, 54.06it/s]
-    [32m[I 2021-06-15 18:53:32,669][0m Trial 2 finished with value: 0.1440434914519713 and parameters: {'n_components': 60, 'n_iter': 10}. Best is trial 2 with value: 0.1440434914519713.[0m
+    [32m[I 2021-06-26 20:14:38,390][0m A new study created in memory with name: no-name-08ef43f9-a4f3-4f27-a47f-74c094984c7a[0m
+    100%|██████████| 40/40 [00:00<00:00, 54.30it/s]
+    [32m[I 2021-06-26 20:15:08,741][0m Trial 0 finished with value: 0.1437793147346196 and parameters: {'n_components': 60, 'n_iter': 20}. Best is trial 0 with value: 0.1437793147346196.[0m
+    100%|██████████| 40/40 [00:00<00:00, 53.99it/s]
+    [32m[I 2021-06-26 20:15:38,592][0m Trial 1 finished with value: 0.14375745266130424 and parameters: {'n_components': 60, 'n_iter': 20}. Best is trial 0 with value: 0.1437793147346196.[0m
+    100%|██████████| 40/40 [00:00<00:00, 54.48it/s]
+    [32m[I 2021-06-26 20:16:14,067][0m Trial 2 finished with value: 0.13687632240507933 and parameters: {'n_components': 100, 'n_iter': 15}. Best is trial 0 with value: 0.1437793147346196.[0m
 
 
     Predicting stage
 
 
-     20%|██        | 6/30 [00:00<00:00, 53.46it/s]
+     20%|██        | 6/30 [00:00<00:00, 53.54it/s]
 
     NDCG calculating stage
 
 
-    100%|██████████| 30/30 [00:00<00:00, 53.97it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.30it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.62it/s]
-    100%|██████████| 30/30 [00:00<00:00, 51.34it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.15it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.33it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.58it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.69it/s]
 
 
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
 model_prediction = svd_rec.predict(train_for_test, test_active, excluding_predictions=train_val, batch_size=100, drop_cold_users=True, number_of_predictions=20)
 
 random_ndcg = ndcg_at_k(random_predictions, test_active, k=20)
@@ -289,11 +293,11 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 )
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 49.25it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.72it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.15it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.04it/s]
 
     
-    P-value: 4.985374417909302e-70
+    P-value: 2.1889036417709382e-63
     
 
 
@@ -339,33 +343,35 @@ print("NDCG calculating stage")
 als_ndcg = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-    [32m[I 2021-06-15 19:01:44,339][0m A new study created in memory with name: no-name-7d6732e8-90b5-4744-93ad-df6e049e044d[0m
-    100%|██████████| 40/40 [00:00<00:00, 51.52it/s]
-    [32m[I 2021-06-15 19:06:16,355][0m Trial 0 finished with value: 0.12725308503421712 and parameters: {'factors': 96, 'regularization': 0.028040860432144155}. Best is trial 0 with value: 0.12725308503421712.[0m
-    100%|██████████| 40/40 [00:00<00:00, 53.88it/s]
-    [32m[I 2021-06-15 19:10:51,161][0m Trial 1 finished with value: 0.12784483950784314 and parameters: {'factors': 96, 'regularization': 0.07964901878594345}. Best is trial 1 with value: 0.12784483950784314.[0m
-    100%|██████████| 40/40 [00:00<00:00, 53.01it/s]
-    [32m[I 2021-06-15 19:15:34,883][0m Trial 2 finished with value: 0.12271271133956951 and parameters: {'factors': 128, 'regularization': 0.015277866847984291}. Best is trial 1 with value: 0.12784483950784314.[0m
+    [32m[I 2021-06-26 20:16:53,913][0m A new study created in memory with name: no-name-1b562ffa-0d5c-48c7-b186-c8743c24aa04[0m
+    WARNING:root:OpenBLAS detected. Its highly recommend to set the environment variable 'export OPENBLAS_NUM_THREADS=1' to disable its internal multithreading
+    100%|██████████| 40/40 [00:00<00:00, 52.72it/s]
+    [32m[I 2021-06-26 20:21:13,908][0m Trial 0 finished with value: 0.12679326594850088 and parameters: {'factors': 96, 'regularization': 0.0157811260905565}. Best is trial 0 with value: 0.12679326594850088.[0m
+    100%|██████████| 40/40 [00:00<00:00, 53.86it/s]
+    [32m[I 2021-06-26 20:25:36,893][0m Trial 1 finished with value: 0.1274288682905004 and parameters: {'factors': 96, 'regularization': 0.07161748063785628}. Best is trial 1 with value: 0.1274288682905004.[0m
+    100%|██████████| 40/40 [00:00<00:00, 52.81it/s]
+    [32m[I 2021-06-26 20:29:58,635][0m Trial 2 finished with value: 0.12740563329061524 and parameters: {'factors': 96, 'regularization': 0.05860324147756538}. Best is trial 1 with value: 0.1274288682905004.[0m
 
 
     Predicting stage
 
 
-     20%|██        | 6/30 [00:00<00:00, 52.07it/s]
+     17%|█▋        | 5/30 [00:00<00:00, 45.38it/s]
 
     NDCG calculating stage
 
 
-    100%|██████████| 30/30 [00:00<00:00, 53.21it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.78it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.96it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.17it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.39it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.81it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.35it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.76it/s]
 
 
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
 model_prediction = [np.array(list(map(lambda x: x[0], implicit_als.recommend(i, train_val, N=100)))) for i in user_ids]
 model_prediction = np.vstack(model_prediction)
 
@@ -379,8 +385,8 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 )
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 52.55it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.71it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.14it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.10it/s]
 
     
     P-value: 0.0
@@ -411,27 +417,28 @@ print("NDCG calculating stage")
 torch_als_ndcg = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-    100%|██████████| 15/15 [03:54<00:00, 15.61s/it]
+    100%|██████████| 15/15 [03:44<00:00, 14.95s/it]
 
 
     Predicting stage
 
 
-     20%|██        | 6/30 [00:00<00:00, 53.57it/s]
+     20%|██        | 6/30 [00:00<00:00, 53.93it/s]
 
     NDCG calculating stage
 
 
-    100%|██████████| 30/30 [00:00<00:00, 54.13it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.43it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.30it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.48it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.58it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.34it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.33it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.86it/s]
 
 
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
 model_prediction = torch_als.predict(train_for_test, test_active, excluding_predictions=train_val, batch_size=100, drop_cold_users=True, number_of_predictions=20)
 
 random_ndcg = ndcg_at_k(random_predictions, test_active, k=20)
@@ -444,11 +451,11 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 )
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 53.99it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.90it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.45it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.52it/s]
 
     
-    P-value: 3.910802885944211e-96
+    P-value: 5.278349129332578e-82
     
 
 
@@ -467,13 +474,13 @@ from src.torch_models import AutoEncoderRecommender
 val_user_ids = np.arange(validation.shape[0])[(train.getnnz(1) > 10) & (validation.getnnz(1) > 5)]
 
 autoencoder = AutoEncoderRecommender(n_items=train.shape[1],
-                                    layers_dims=[1024, 1024, 1024, 1024, 1024*2],
-                                    activation='relu',
+                                    layers_dims=[1024, 512, 256],
+                                    activation='swish',
                                     n_epoch=10,
                                     device=device,
-                                    lr=0.005,
+                                    lr=0.003,
                                     optimizer='adam',
-                                    batch_size=256,
+                                    batch_size=512,
                                     dropout=0.8,
                                     augmentation_step=1)
 
@@ -482,73 +489,75 @@ autoencoder.train()
 autoencoder.fit(train, val_active, val_user_ids=val_user_ids)
 ```
 
-    Epoch 1: 100%|██████████| 394/394 [00:25<00:00, 15.37it/s, Train Loss: 320.1041]   
-    100%|██████████| 40/40 [00:00<00:00, 52.68it/s]
-    Epoch 2:   1%|          | 2/394 [00:00<00:27, 14.44it/s, Train Loss: 451.72375]
+    Epoch 1:   0%|          | 0/197 [00:00<?, ?it/s]/usr/local/lib/python3.9/site-packages/torch/nn/functional.py:1805: UserWarning: nn.functional.sigmoid is deprecated. Use torch.sigmoid instead.
+      warnings.warn("nn.functional.sigmoid is deprecated. Use torch.sigmoid instead.")
+    Epoch 1: 100%|██████████| 197/197 [00:14<00:00, 13.48it/s, Train Loss: 5135.83301]  
+    100%|██████████| 40/40 [00:00<00:00, 53.48it/s]
+    Epoch 2:   1%|          | 2/197 [00:00<00:15, 12.75it/s, Train Loss: 6947.78271]
 
-    Validation NDCG: 0.09756645925484847
-
-
-    Epoch 2: 100%|██████████| 394/394 [00:25<00:00, 15.31it/s, Train Loss: 210.43758] 
-    100%|██████████| 40/40 [00:00<00:00, 52.67it/s]
-    Epoch 3:   1%|          | 2/394 [00:00<00:31, 12.61it/s, Train Loss: 288.17816]
-
-    Validation NDCG: 0.09610678633310907
+    Validation NDCG: 0.09874638615209687
 
 
-    Epoch 3: 100%|██████████| 394/394 [00:25<00:00, 15.27it/s, Train Loss: 123.44775]
-    100%|██████████| 40/40 [00:00<00:00, 52.85it/s]
-    Epoch 4:   1%|          | 2/394 [00:00<00:28, 13.75it/s, Train Loss: 177.11029]
+    Epoch 2: 100%|██████████| 197/197 [00:14<00:00, 13.60it/s, Train Loss: 624184.875]  
+    100%|██████████| 40/40 [00:00<00:00, 53.46it/s]
+    Epoch 3:   1%|          | 2/197 [00:00<00:15, 12.31it/s, Train Loss: 565326.6875]
 
-    Validation NDCG: 0.09534182404242565
-
-
-    Epoch 4: 100%|██████████| 394/394 [00:25<00:00, 15.45it/s, Train Loss: 585.3147] 
-    100%|██████████| 40/40 [00:00<00:00, 52.91it/s]
-    Epoch 5:   1%|          | 2/394 [00:00<00:29, 13.30it/s, Train Loss: 576.61267]
-
-    Validation NDCG: 0.09497657825057172
+    Validation NDCG: 0.07078591786859549
 
 
-    Epoch 5: 100%|██████████| 394/394 [00:25<00:00, 15.35it/s, Train Loss: 90.54688]     
-    100%|██████████| 40/40 [00:00<00:00, 52.77it/s]
-    Epoch 6:   1%|          | 2/394 [00:00<00:26, 14.73it/s, Train Loss: 200.18311]
+    Epoch 3: 100%|██████████| 197/197 [00:14<00:00, 13.67it/s, Train Loss: 140511.96875]
+    100%|██████████| 40/40 [00:00<00:00, 53.28it/s]
+    Epoch 4:   1%|          | 2/197 [00:00<00:16, 11.77it/s, Train Loss: 133047.875]
 
-    Validation NDCG: 0.10686153243773526
-
-
-    Epoch 6: 100%|██████████| 394/394 [00:25<00:00, 15.40it/s, Train Loss: 97.15962]  
-    100%|██████████| 40/40 [00:00<00:00, 52.73it/s]
-    Epoch 7:   1%|          | 2/394 [00:00<00:28, 13.86it/s, Train Loss: 367.56152]
-
-    Validation NDCG: 0.10430074535726323
+    Validation NDCG: 0.10819827833440061
 
 
-    Epoch 7: 100%|██████████| 394/394 [00:25<00:00, 15.39it/s, Train Loss: 582.13391] 
-    100%|██████████| 40/40 [00:00<00:00, 52.80it/s]
-    Epoch 8:   1%|          | 2/394 [00:00<00:25, 15.26it/s, Train Loss: 477.42065]
+    Epoch 4: 100%|██████████| 197/197 [00:14<00:00, 13.60it/s, Train Loss: 113157.35938]
+    100%|██████████| 40/40 [00:00<00:00, 53.39it/s]
+    Epoch 5:   1%|          | 2/197 [00:00<00:16, 11.97it/s, Train Loss: 101389.25781]
 
-    Validation NDCG: 0.10293957990836208
-
-
-    Epoch 8: 100%|██████████| 394/394 [00:25<00:00, 15.38it/s, Train Loss: 121.87525] 
-    100%|██████████| 40/40 [00:00<00:00, 52.76it/s]
-    Epoch 9:   1%|          | 2/394 [00:00<00:25, 15.15it/s, Train Loss: 256.99323]
-
-    Validation NDCG: 0.10418713374798778
+    Validation NDCG: 0.1105789439340459
 
 
-    Epoch 9: 100%|██████████| 394/394 [00:25<00:00, 15.41it/s, Train Loss: 178.43388] 
-    100%|██████████| 40/40 [00:00<00:00, 52.61it/s]
-    Epoch 10:   1%|          | 2/394 [00:00<00:28, 13.55it/s, Train Loss: 321.17081]
+    Epoch 5: 100%|██████████| 197/197 [00:14<00:00, 13.51it/s, Train Loss: 80971.8125]  
+    100%|██████████| 40/40 [00:00<00:00, 53.48it/s]
+    Epoch 6:   1%|          | 2/197 [00:00<00:16, 11.61it/s, Train Loss: 75954.54688]
 
-    Validation NDCG: 0.10566184081223955
+    Validation NDCG: 0.11225503075307268
 
 
-    Epoch 10: 100%|██████████| 394/394 [00:25<00:00, 15.32it/s, Train Loss: 207.38052] 
-    100%|██████████| 40/40 [00:00<00:00, 52.53it/s]
+    Epoch 6: 100%|██████████| 197/197 [00:14<00:00, 13.54it/s, Train Loss: 57004.11719]
+    100%|██████████| 40/40 [00:00<00:00, 53.37it/s]
+    Epoch 7:   1%|          | 2/197 [00:00<00:15, 12.53it/s, Train Loss: 51860.73438]
 
-    Validation NDCG: 0.10289168636471452
+    Validation NDCG: 0.11383947241372286
+
+
+    Epoch 7: 100%|██████████| 197/197 [00:14<00:00, 13.58it/s, Train Loss: 43741.11719]
+    100%|██████████| 40/40 [00:00<00:00, 53.49it/s]
+    Epoch 8:   1%|          | 2/197 [00:00<00:16, 11.95it/s, Train Loss: 44401.25]
+
+    Validation NDCG: 0.11588393716898428
+
+
+    Epoch 8: 100%|██████████| 197/197 [00:14<00:00, 13.56it/s, Train Loss: 25509.60547]
+    100%|██████████| 40/40 [00:00<00:00, 52.90it/s]
+    Epoch 9:   1%|          | 2/197 [00:00<00:16, 11.64it/s, Train Loss: 26413.36719]
+
+    Validation NDCG: 0.11790562135312518
+
+
+    Epoch 9: 100%|██████████| 197/197 [00:14<00:00, 13.49it/s, Train Loss: 16970.66016]
+    100%|██████████| 40/40 [00:00<00:00, 53.46it/s]
+    Epoch 10:   1%|          | 2/197 [00:00<00:16, 12.08it/s, Train Loss: 16380.78125]
+
+    Validation NDCG: 0.11888835219603894
+
+
+    Epoch 10: 100%|██████████| 197/197 [00:14<00:00, 13.58it/s, Train Loss: 8715.34766] 
+    100%|██████████| 40/40 [00:00<00:00, 53.15it/s]
+
+    Validation NDCG: 0.1186450848815234
 
 
     
@@ -570,16 +579,17 @@ predictions = autoencoder.predict(train_val, test_active, excluding_predictions=
 autoencoder_ndcg = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 53.93it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.42it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.73it/s]
-    100%|██████████| 30/30 [00:00<00:00, 52.41it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.76it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.27it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.46it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.09it/s]
 
 
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
 model_prediction = autoencoder.predict(train_val, test_active, excluding_predictions=train_val, batch_size=100, drop_cold_users=True,
                              user_ids=user_ids, number_of_predictions=20)
 
@@ -593,11 +603,11 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 )
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 53.59it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.74it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.49it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.08it/s]
 
     
-    P-value: 4.0536048234926105e-277
+    P-value: 0.0
     
 
 
@@ -663,10 +673,94 @@ items_features = sp.csr_matrix((items_features['relevance'], (items_features['mo
 from lightfm import LightFM
 
 lf = LightFM(no_components=30)
-lf.fit(train_val_for_test, item_features=items_features, epochs=10, num_threads=6)
+lf.fit(train_val, item_features=items_features, epochs=10, num_threads=6)
 ```
 
-### К сожалению, у меня очень долго обучался LightFM, и я не смог проанализировать его результаты :(
+
+
+
+    <lightfm.lightfm.LightFM at 0x7fcb2a4f8a30>
+
+
+
+
+```python
+import pickle
+
+with open('lf.pkl', 'wb') as write_file:
+    pickle.dump(lf, write_file, pickle.HIGHEST_PROTOCOL)
+```
+
+
+```python
+# Set the ids of users to predict
+user_ids = np.arange(test.shape[0])[(train.getnnz(1) > 10) & (test.getnnz(1) > 5)]
+items_ids = np.arange(0, test.shape[1])
+
+# set empty prediction list
+predictions_all = []
+
+# Iterating over batches to make predictions
+for start_ind in tqdm(range(0, len(user_ids), 10)):
+    batch = user_ids[start_ind: start_ind + 10]
+    
+    scores = lf.predict(user_ids=np.repeat(batch, train_val.shape[1]), item_ids=np.tile(items_ids, len(batch)), item_features=items_features)
+    
+    # excluding train predictions
+    scores[train_val[batch, :].nonzero()] = -np.inf
+    
+    # predictions 
+    predictions = np.argsort(scores, axis=1)[:, ::-1][:, :100]
+    
+    # Appending results
+    predictions_all.extend(predictions)
+    
+predictions_all = np.array(predictions_all)
+```
+
+    100%|██████████| 295/295 [03:52<00:00,  1.27it/s]
+
+
+
+```python
+lf_ndcg = [ndcg_at_k(predictions_all, test_active, k=i).mean() for i in (10, 20, 50, 100)]
+```
+
+    100%|██████████| 30/30 [00:00<00:00, 51.85it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.90it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.53it/s]
+    100%|██████████| 30/30 [00:00<00:00, 51.44it/s]
+
+
+
+```python
+# тестируем
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
+model_prediction = predictions_all[:, :20]
+
+random_ndcg = ndcg_at_k(random_predictions, test_active, k=20)
+model_ndcg = ndcg_at_k(model_prediction, test_active, k=20)
+
+print(
+f"""
+P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
+"""
+)
+```
+
+    100%|██████████| 30/30 [00:00<00:00, 53.99it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.01it/s]
+
+    
+    P-value: 0.0
+    
+
+
+    
+
+
+Средние значения метрик, полученные с помощью рандомных предсказаний и с помощью предсказаний модели, статистически значимо различаются.
 
 ### DSSM
 Попробовал реализовать DSSM на Pytorch. Гиперпараметры также не вычислялись из-за вычислительных ограничений.
@@ -686,73 +780,73 @@ train_user_ids = np.arange(validation.shape[0])
 dssm.fit(train, val_active, item_features=items_features, user_ind_train=train_user_ids, user_ind_val=val_user_ids)
 ```
 
-    Epoch 1: 100%|██████████| 271/271 [00:38<00:00,  7.10it/s, Train Loss: 1.2409677217468703e+21]
-    100%|██████████| 40/40 [00:00<00:00, 52.75it/s]
-    Epoch 2:   0%|          | 1/271 [00:00<00:40,  6.60it/s, Train Loss: 1.2711688608480169e+21]
+    Epoch 1: 100%|██████████| 271/271 [00:37<00:00,  7.15it/s, Train Loss: 6.303806617920702e+20] 
+    100%|██████████| 40/40 [00:00<00:00, 52.94it/s]
+    Epoch 2:   0%|          | 1/271 [00:00<00:41,  6.54it/s, Train Loss: 8.526408328584312e+20]
 
-    Validation NDCG: 0.11031884623512832
-
-
-    Epoch 2: 100%|██████████| 271/271 [00:38<00:00,  7.11it/s, Train Loss: 5.1637115761588385e+20]
-    100%|██████████| 40/40 [00:00<00:00, 52.63it/s]
-    Epoch 3:   0%|          | 1/271 [00:00<00:40,  6.72it/s, Train Loss: 4.68031524724898e+20]
-
-    Validation NDCG: 0.11024503311835472
+    Validation NDCG: 0.11054194120366037
 
 
-    Epoch 3: 100%|██████████| 271/271 [00:37<00:00,  7.16it/s, Train Loss: 3.216020845748992e+20] 
-    100%|██████████| 40/40 [00:00<00:00, 52.76it/s]
-    Epoch 4:   0%|          | 1/271 [00:00<00:40,  6.70it/s, Train Loss: 3.1184654891020085e+20]
+    Epoch 2: 100%|██████████| 271/271 [00:36<00:00,  7.52it/s, Train Loss: 2.9159600763261315e+20]
+    100%|██████████| 40/40 [00:00<00:00, 52.90it/s]
+    Epoch 3:   0%|          | 1/271 [00:00<00:29,  9.14it/s, Train Loss: 4.0495748604366737e+20]
 
-    Validation NDCG: 0.1101828085707756
-
-
-    Epoch 4: 100%|██████████| 271/271 [00:38<00:00,  7.12it/s, Train Loss: 2.237899875647834e+20] 
-    100%|██████████| 40/40 [00:00<00:00, 52.57it/s]
-    Epoch 5:   0%|          | 1/271 [00:00<00:41,  6.43it/s, Train Loss: 2.3318987959640785e+20]
-
-    Validation NDCG: 0.10985087122014847
+    Validation NDCG: 0.11028292021262767
 
 
-    Epoch 5: 100%|██████████| 271/271 [00:38<00:00,  7.10it/s, Train Loss: 1.2513681693597709e+20]
-    100%|██████████| 40/40 [00:00<00:00, 52.93it/s]
-    Epoch 6:   0%|          | 1/271 [00:00<00:40,  6.65it/s, Train Loss: 1.018653542669353e+20]
+    Epoch 3: 100%|██████████| 271/271 [00:37<00:00,  7.26it/s, Train Loss: 1.3600965872463538e+20]
+    100%|██████████| 40/40 [00:00<00:00, 51.50it/s]
+    Epoch 4:   0%|          | 1/271 [00:00<00:40,  6.74it/s, Train Loss: 1.805556070638871e+20]
 
-    Validation NDCG: 0.10967045870230498
-
-
-    Epoch 6: 100%|██████████| 271/271 [00:38<00:00,  7.09it/s, Train Loss: 7.501459422138964e+19] 
-    100%|██████████| 40/40 [00:00<00:00, 50.91it/s]
-    Epoch 7:   0%|          | 1/271 [00:00<00:43,  6.17it/s, Train Loss: 9.048380803052365e+19]
-
-    Validation NDCG: 0.10945030345322956
+    Validation NDCG: 0.11023647724103322
 
 
-    Epoch 7: 100%|██████████| 271/271 [00:38<00:00,  7.01it/s, Train Loss: 6.191358772099678e+19] 
-    100%|██████████| 40/40 [00:00<00:00, 52.93it/s]
-    Epoch 8:   0%|          | 1/271 [00:00<00:42,  6.37it/s, Train Loss: 6.5822804556531106e+19]
+    Epoch 4: 100%|██████████| 271/271 [00:38<00:00,  7.10it/s, Train Loss: 1.0572367251019661e+20]
+    100%|██████████| 40/40 [00:00<00:00, 52.70it/s]
+    Epoch 5:   0%|          | 1/271 [00:00<00:41,  6.57it/s, Train Loss: 1.0864740586984833e+20]
 
-    Validation NDCG: 0.10954587769080419
-
-
-    Epoch 8: 100%|██████████| 271/271 [00:38<00:00,  7.05it/s, Train Loss: 6.86146756856869e+19]  
-    100%|██████████| 40/40 [00:00<00:00, 52.03it/s]
-    Epoch 9:   0%|          | 1/271 [00:00<00:41,  6.55it/s, Train Loss: 4.672342556494581e+19]
-
-    Validation NDCG: 0.10951990177118412
+    Validation NDCG: 0.11001960782771722
 
 
-    Epoch 9: 100%|██████████| 271/271 [00:38<00:00,  6.99it/s, Train Loss: 4.107913540031585e+19] 
-    100%|██████████| 40/40 [00:00<00:00, 52.37it/s]
-    Epoch 10:   0%|          | 1/271 [00:00<00:41,  6.46it/s, Train Loss: 4.753336981043072e+19]
+    Epoch 5: 100%|██████████| 271/271 [00:37<00:00,  7.14it/s, Train Loss: 7.557454470709038e+19] 
+    100%|██████████| 40/40 [00:00<00:00, 52.95it/s]
+    Epoch 6:   0%|          | 1/271 [00:00<00:41,  6.53it/s, Train Loss: 5.6629167712137904e+19]
 
-    Validation NDCG: 0.10921261369910792
+    Validation NDCG: 0.10982049498764887
 
 
-    Epoch 10: 100%|██████████| 271/271 [00:37<00:00,  7.16it/s, Train Loss: 3.910022557655158e+19] 
-    100%|██████████| 40/40 [00:00<00:00, 52.47it/s]
+    Epoch 6: 100%|██████████| 271/271 [00:37<00:00,  7.18it/s, Train Loss: 6.1362173843574096e+19]
+    100%|██████████| 40/40 [00:00<00:00, 52.81it/s]
+    Epoch 7:   0%|          | 1/271 [00:00<00:41,  6.56it/s, Train Loss: 4.7743125842684805e+19]
 
-    Validation NDCG: 0.10919725684664172
+    Validation NDCG: 0.1096352125696313
+
+
+    Epoch 7: 100%|██████████| 271/271 [00:38<00:00,  7.13it/s, Train Loss: 3.703433998498372e+19] 
+    100%|██████████| 40/40 [00:00<00:00, 53.04it/s]
+    Epoch 8:   0%|          | 1/271 [00:00<00:40,  6.65it/s, Train Loss: 3.3756990491699708e+19]
+
+    Validation NDCG: 0.10940291965249553
+
+
+    Epoch 8: 100%|██████████| 271/271 [00:38<00:00,  7.12it/s, Train Loss: 3.206853645562177e+19] 
+    100%|██████████| 40/40 [00:00<00:00, 52.96it/s]
+    Epoch 9:   0%|          | 1/271 [00:00<00:40,  6.68it/s, Train Loss: 2.20439810819322e+19]
+
+    Validation NDCG: 0.10919461152887008
+
+
+    Epoch 9: 100%|██████████| 271/271 [00:37<00:00,  7.14it/s, Train Loss: 2.2793821623796367e+19]
+    100%|██████████| 40/40 [00:00<00:00, 53.10it/s]
+    Epoch 10:   0%|          | 1/271 [00:00<00:41,  6.53it/s, Train Loss: 2.267703589674051e+19]
+
+    Validation NDCG: 0.10906961766458684
+
+
+    Epoch 10: 100%|██████████| 271/271 [00:37<00:00,  7.17it/s, Train Loss: 1.7195504239346975e+19]
+    100%|██████████| 40/40 [00:00<00:00, 53.02it/s]
+
+    Validation NDCG: 0.10896395391036418
 
 
     
@@ -769,10 +863,10 @@ predictions = dssm.predict(item_features=items_features, number_of_predictions=1
 ndcg_dssm = [ndcg_at_k(predictions, test_active, k=i).mean() for i in (10, 20, 50, 100)]
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 53.14it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.71it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.02it/s]
-    100%|██████████| 30/30 [00:00<00:00, 51.71it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.86it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.78it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.08it/s]
+    100%|██████████| 30/30 [00:00<00:00, 52.58it/s]
 
 
 
@@ -782,8 +876,9 @@ x = np.arange(0, 4)
 ax.plot(x, most_pop_ndcg, marker='^', markersize=20, label='Most Popular')
 ax.plot(x, svd_ndcg, marker='^', markersize=20, label='SVD')
 ax.plot(x, als_ndcg, marker='^', markersize=20, label='ALS')
-ax.plot(x, torch_als_ndcg, marker='^', markersize=20, label='Torch_ALS')#
+ax.plot(x, torch_als_ndcg, marker='^', markersize=20, label='Torch_ALS')
 ax.plot(x, autoencoder_ndcg, marker='^', markersize=20, label='AutoEncoder')
+ax.plot(x, lf_ndcg, marker='^', markersize=20, label='LightFM')
 ax.plot(x, ndcg_dssm, marker='^', markersize=20, label='DSSM')
 ax.legend()
 ax.set_xticks(x)
@@ -797,7 +892,7 @@ plt.show()
 
 
     
-![png](output_52_0.png)
+![png](output_56_0.png)
     
 
 
@@ -806,7 +901,8 @@ DSSM также может быть улучшена путем более тщ�
 
 ```python
 # тестируем
-random_predictions = np.random.randint(0, train.shape[1], (test_active.shape[0], 20))
+random_predictor = RandomRecommender()
+random_predictor.predict(test_active, excluding_predictions=train_val_for_test, random_state=123)
 model_prediction = dssm.predict(item_features=items_features, number_of_predictions=20, user_ids=user_ids, excluding_predictions=train_val,)
 
 random_ndcg = ndcg_at_k(random_predictions, test_active, k=20)
@@ -819,8 +915,8 @@ P-value: {scipy.stats.ttest_ind(random_ndcg, model_ndcg)[1]}
 )
 ```
 
-    100%|██████████| 30/30 [00:00<00:00, 54.29it/s]
-    100%|██████████| 30/30 [00:00<00:00, 53.97it/s]
+    100%|██████████| 30/30 [00:00<00:00, 54.26it/s]
+    100%|██████████| 30/30 [00:00<00:00, 53.96it/s]
 
     
     P-value: 0.0

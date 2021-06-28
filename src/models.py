@@ -128,7 +128,7 @@ class SVDRecommender(TruncatedSVD):
                 number_of_predictions: int = 100,
                 excluding_predictions=None,
                 drop_cold_users: bool = True,
-                batch_size=1000,
+                batch_size: int =1000,
                 user_ids=None) -> np.array:
         """
         Method for generating predictions
@@ -177,3 +177,62 @@ class SVDRecommender(TruncatedSVD):
             predictions_all = predictions_all[test_matrix.getnnz(axis=1) > 0]
 
         return predictions_all
+
+
+class RandomRecommender:
+    @staticmethod
+    def predict(test_matrix: sp.csr_matrix,
+                random_state: int = 1,
+                excluding_predictions=None,
+                drop_cold_users: bool = True,
+                number_of_predictions: int = 100,
+                batch_size: int = 1000) -> np.array:
+        """
+        Method to make random predictions
+
+        :param test_matrix: Test matrix with users interactions.
+        :param random_state: random state for the predictions
+        :param excluding_predictions: if not None, then sparse matrix with values, than should no be included in
+        predictions
+        :param drop_cold_users: if True, then all non active users will be dropped
+        :param number_of_predictions: Number of predictions to generate
+        :param batch_size:
+        :return: randomized predictions
+        """
+
+        # Set random state
+        np.random.seed(random_state)
+
+        # Extracting all indices for the matrix
+        all_indices = np.arange(0, test_matrix.shape[0])
+
+        # Variable to save all predictions
+        predictions_all = []
+
+        # Iterating over batches to make predictions
+        for start_ind in range(0, len(all_indices), batch_size):
+
+            # Selecting batch indices
+            batch_indices = all_indices[start_ind: start_ind + batch_size]
+
+            # Creating random scores
+            scores = np.random.rand(len(batch_indices), test_matrix.shape[1])
+
+            # Excluding predictions
+            if excluding_predictions is not None:
+                scores[excluding_predictions[batch_indices, :].nonzero()] = -np.inf
+
+            # Make recommendations
+            predictions = np.argsort(scores, axis=1)[:, ::-1][:, :number_of_predictions]
+
+            # Appending results
+            predictions_all.extend(predictions)
+
+        predictions_all = np.array(predictions_all)
+
+        # Deleting cold users
+        if drop_cold_users:
+            predictions_all = predictions_all[test_matrix.getnnz(axis=1) > 0]
+
+        return predictions_all
+
